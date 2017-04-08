@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SerialMock Serial Base Class &mdash; Serial Mock 0.0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Serial Mock 0.0.1a1 documentation" href="index.html" />
+    <link rel="next" title="SerialMock SerialQuery Decorator" href="decorators.html" />
+    <link rel="prev" title="Welcome to Serial Mock’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="serialmock-serial-base-class">
+<h1>SerialMock <cite>Serial</cite> Base Class<a class="headerlink" href="#serialmock-serial-base-class" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="serial_mock.Serial">
+<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">Serial</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#Serial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.Serial" title="Permalink to this definition">¶</a></dt>
+<dd><div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Serial</span><span class="p">(</span><span class="s">&quot;COM99&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">MainLoop</span><span class="p">()</span> <span class="c"># run forever on COM99</span>
+</pre></div>
+</div>
+<p><strong>Serial(stream:string)</strong> instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
+<em>in general this class should not be directly invoked but should be subclassed</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> &#8211; a path to a pipe (ie &#8220;/dev/ttyS99&#8221;,&#8221;COM11&#8221;)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">examples</p>
+</div>
+<dl class="attribute">
+<dt id="serial_mock.Serial.baudrate">
+<code class="descname">baudrate</code><em class="property"> = 9600</em><a class="headerlink" href="#serial_mock.Serial.baudrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <strong>baudrate</strong> we should operate at</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.prompt">
+<code class="descname">prompt</code><em class="property"> = '&gt;'</em><a class="headerlink" href="#serial_mock.Serial.prompt" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <strong>prompt</strong> to display to the user</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.user_terminal">
+<code class="descname">user_terminal</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.user_terminal" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>user_terminal</strong> defines the character(or characters, or regexp, or list) of items that indicate our user has finished a command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.endline">
+<code class="descname">endline</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.endline" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>endline</strong> defines the character to output after our response but before our prompt</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.data">
+<code class="descname">data</code><em class="property"> = {}</em><a class="headerlink" href="#serial_mock.Serial.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>any keys defined in <strong>data</strong> will automatically have getters or setters created for them</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="serial_mock.Serial.MainLoop">
+<code class="descname">MainLoop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#Serial.MainLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.Serial.MainLoop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mainloop will run forever serving the rules provided in the subclass to the bound pipe</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="serial_mock.EmittingSerial">
+<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">EmittingSerial</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#EmittingSerial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.EmittingSerial" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Serial(stream:string)</strong> instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
+<em>in general this class should not be directly invoked but should be subclassed</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> &#8211; a path to a pipe (ie &#8220;/dev/ttyS99&#8221;,&#8221;COM11&#8221;)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">examples</p>
+</div>
+<dl class="attribute">
+<dt id="serial_mock.EmittingSerial.emit">
+<code class="descname">emit</code><em class="property"> = 'EMIT MSG'</em><a class="headerlink" href="#serial_mock.EmittingSerial.emit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.EmittingSerial.delay">
+<code class="descname">delay</code><em class="property"> = (5, 35)</em><a class="headerlink" href="#serial_mock.EmittingSerial.delay" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.EmittingSerial.interval">
+<code class="descname">interval</code><em class="property"> = (15, 35)</em><a class="headerlink" href="#serial_mock.EmittingSerial.interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="serial_mock.EmittingSerial.MainLoop">
+<code class="descname">MainLoop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#EmittingSerial.MainLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.EmittingSerial.MainLoop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SerialMock <cite>Serial</cite> Base Class</a><ul>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Serial Mock&#8217;s documentation!</a></li>
+      <li>Next: <a href="decorators.html" title="next chapter">SerialMock <cite>SerialQuery</cite> Decorator</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/serial_mock.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Joran Beasley.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/serial_mock.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
