@@ -1,4 +1,5 @@
 import functools
+import re
 
 import time
 
@@ -17,11 +18,11 @@ class QueryStore(object):
     @staticmethod
     def find(cmd):
         for key in QueryStore.__registered_routes:
-            if cmd.startswith(key):
-                method= QueryStore.__registered_routes[key],cmd.split(key,1)[-1].split()
+            if (isinstance(key,basestring) and cmd.startswith(key)) or isinstance(key,re._pattern_type) and key.match(cmd):
+                method,rest= QueryStore.__registered_routes[key],cmd.split(key,1)[-1].split() if isinstance(key,basestring) else key.match(cmd).groups()
                 if method.delay:
                     time.sleep(method.delay)
-                return method
+                return method,rest
 
         raise KeyError
     @staticmethod
@@ -35,13 +36,13 @@ class QueryStore(object):
     def __new__(cls,*args,**kwargs):
         print args,kwargs
         route=delay = None
-        if isinstance(args[0],basestring):
+        if isinstance(args[0],(basestring,re._pattern_type)):
             route=args[0]
         elif "route" in kwargs:
             route = kwargs["route"]
-        if not isinstance(args[0],basestring) and isinstance(args[0],(int,float)):
+        if not isinstance(args[0],(basestring,re._pattern_type)) and isinstance(args[0],(int,float)):
             delay = args[0]
-        elif isinstance(args[0],basestring) and len(args) >= 2 and isinstance(args[1],(int,float)):
+        elif isinstance(args[0],(basestring,re._pattern_type)) and len(args) >= 2 and isinstance(args[1],(int,float)):
             delay = args[1]
         elif "delay" in kwargs:
             delay = kwargs['delay']

@@ -14,5 +14,3 @@ setup(
     description='mocks serial ports for use with com0com(windows) or socat(*nix)'
 )
 
-if sys.argv[-1] == "build_docs":
-    os.system("cd docs && sphinx-build -b html -d build/doctrees  source build/html")

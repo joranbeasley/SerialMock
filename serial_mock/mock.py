@@ -8,7 +8,7 @@ import traceback
 import serial
 import re
 import time
-from serial_mock.decorators import serial_query as SerialQuery, QueryStore
+from serial_mock.decorators import serial_query as SerialQuery, QueryStore, serial_query
 
 
 class Serial(object):
@@ -123,6 +123,9 @@ class EmittingSerial(Serial):
         print "MainLoop"
         threading.Timer(random.uniform(*self.delay), self._on_start_emit).start()
         Serial.MainLoop(self)
+
+
+
 if __name__ == "__main__":
-    s = EmitingSerial("COM106")
+    s = EchoSerial("COM106")
     s.MainLoop()
