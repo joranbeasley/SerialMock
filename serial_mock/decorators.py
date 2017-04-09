@@ -7,7 +7,7 @@ import time
 class QueryStore(object):
     """
     >>> @QueryStore.register("show")
-    ... def show_info():
+    ... def show_info(self):
     ...    return "MyDevice v0.0.1 SN123456"
     ...
     
@@ -16,7 +16,7 @@ class QueryStore(object):
 
     }
     @staticmethod
-    def find(cmd):
+    def _find(cmd):
         for key in QueryStore.__registered_routes:
             if (isinstance(key,basestring) and cmd.startswith(key)) or isinstance(key,re._pattern_type) and key.match(cmd):
                 method,rest= QueryStore.__registered_routes[key],cmd.split(key,1)[-1].split() if isinstance(key,basestring) else key.match(cmd).groups()
@@ -27,6 +27,15 @@ class QueryStore(object):
         raise KeyError
     @staticmethod
     def register(func,route=None,delay=None):
+        '''
+        Register acts as our decorator function typically it is imported as serial_query
+        :seealso: serial_query
+        
+        :param func: the function instance to register to the given route 
+        :param route: the serial command to listen to
+        :param delay: how long to wait before responding to a given command
+        :return: 
+        '''
         if route is None:
             route = func.__name__
         func.delay = delay
@@ -34,7 +43,6 @@ class QueryStore(object):
         return func
 
     def __new__(cls,*args,**kwargs):
-        print args,kwargs
         route=delay = None
         if isinstance(args[0],(basestring,re._pattern_type)):
             route=args[0]

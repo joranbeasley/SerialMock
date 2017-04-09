@@ -1,5 +1,7 @@
 """
-fake_serial.Serial provides our interface to our fake serial (suprise!)
+fake_serial.Serial provides our interface to our fake serial (suprise!).
+
+note that **data** is a special attribute and any keys passed into it will automatically have getters and setters provided for it
 """
 import random
 import threading
@@ -8,7 +10,7 @@ import traceback
 import serial
 import re
 import time
-from serial_mock.decorators import serial_query as SerialQuery, QueryStore, serial_query
+from serial_mock.decorators import QueryStore
 
 
 class Serial(object):
@@ -18,28 +20,40 @@ class Serial(object):
     
     """
     _LOCK = threading.Lock()
+    #: any keys defined in **data** will automatically have getters or setters created for them
+    data = {}
+    #: the prefix to use with data auto generated routes
+    data_prefix="-"
     #: the **baudrate** we should operate at
     baudrate=9600
     #: the **prompt** to display to the user
     prompt=">"
     #: **user_terminal** defines the character(or characters, or regexp, or list) of items that indicate our user has finished a command
-    user_terminal="\r"
+    delimiter="\r"
     #:**endline** defines the character to output after our response but before our prompt
     endline="\r"
-    #:any keys defined in **data** will automatically have getters or setters created for them
-    data = {}
 
-    def __init__(self,stream):
+    logfile = None
+
+
+
+    def __init__(self,stream,logfile=None,**kwargs):
         """
             **Serial(stream:string)** instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
-            *in general this class should not be directly invoked but should be subclassed*
+            *in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file*
 
             :param stream: a path to a pipe (ie "/dev/ttyS99","COM11")
             
-            .. seealso:: examples
+           
         """
         super(Serial,self).__init__()
+        for key in "data_prefix baudrate prompt delimiter endline".split():
+            if key in kwargs:
+                setattr(self,key,kwargs.pop(key))
+
         self.stream = None
+        if logfile:
+            self.logfile = open(logfile,"wb")
         if isinstance(stream,basestring):
             try:
                 self.stream = serial.Serial(stream,self.baudrate)
@@ -50,7 +64,8 @@ class Serial(object):
             QueryStore.register(lambda self,value,k=k:self.data.update({k:value}) or "OK","set -%s"%k)
 
         assert hasattr(self.stream,"read") and hasattr(self.stream,"write"),"STREAM must provide a minimum of read and write"
-    def _read_from_stream(self):
+    @staticmethod
+    def _read_from_stream(stream,terminal):
         def check_term(s,check_item):
             if isinstance(check_item,basestring):
                 return s.endswith(check_item)
@@ -64,14 +79,15 @@ class Serial(object):
         def my_iter():
             s = ""
             while True:
-                if self.stream.inWaiting():
-                    self._LOCK.acquire()
+                if stream.inWaiting():
+                    Serial._LOCK.acquire()
                     try:
-                        s += self.stream.read(self.stream.inWaiting())
-                        if check_term(s,self.user_terminal):
+                        s += stream.read(stream.inWaiting())
+                        if check_term(s,terminal):
                             return s
+
                     finally:
-                        self._LOCK.release()
+                        Serial._LOCK.release()
                 else:
                     time.sleep(0.25)
         return my_iter()
@@ -79,12 +95,15 @@ class Serial(object):
 
     def _process_cmd(self,cmd):
         cmd = re.sub(".\x08","",cmd.strip())
+        if self.logfile:
+            self.logfile.write("<%r\n"%(cmd,))
         if not cmd:
             return ""
         try:
-            method,rest = QueryStore.find(cmd)
+            method,rest = QueryStore._find(cmd)
 
         except KeyError:
+            traceback.print_exc()
             return "ERROR %r Not Found"%cmd
         try:
             return method(self,*rest)
@@ -93,20 +112,24 @@ class Serial(object):
             return "ERROR %r"%cmd
     def _write_to_stream(self,response):
         if not response:return
+        if self.logfile:
+            self.logfile.write(">%r\n"%(response,))
         self._LOCK.acquire()
         try:
             self.stream.write("%s%s"%(response,self.endline))
         finally:
             self._LOCK.release()
 
+
     def MainLoop(self):
         """
         Mainloop will run forever serving the rules provided in the subclass to the bound pipe
         
         """
+        print "LISTENING ON:",self.stream
         while True:
             self.stream.write(self.prompt)
-            cmd = self._process_cmd(self._read_from_stream())
+            cmd = self._process_cmd(self._read_from_stream(self.stream,self.delimiter))
             self._write_to_stream(cmd)
 
 
@@ -126,6 +149,3 @@ class EmittingSerial(Serial):
 
 
 
-if __name__ == "__main__":
-    s = EchoSerial("COM106")
-    s.MainLoop()

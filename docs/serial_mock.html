@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Serial Mock 0.0.1a1 documentation" href="index.html" />
     <link rel="next" title="SerialMock SerialQuery Decorator" href="decorators.html" />
-    <link rel="prev" title="Welcome to Serial Mock’s documentation!" href="index.html" />
+    <link rel="prev" title="Setting up a Null Modem" href="nullmodem.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -64,6 +64,18 @@
 <p class="last">examples</p>
 </div>
 <dl class="attribute">
+<dt id="serial_mock.Serial.data">
+<code class="descname">data</code><em class="property"> = {}</em><a class="headerlink" href="#serial_mock.Serial.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>any keys defined in <strong>data</strong> will automatically have getters or setters created for them</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.data_prefix">
+<code class="descname">data_prefix</code><em class="property"> = '-'</em><a class="headerlink" href="#serial_mock.Serial.data_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>the prefix to use with data auto generated routes</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="serial_mock.Serial.baudrate">
 <code class="descname">baudrate</code><em class="property"> = 9600</em><a class="headerlink" href="#serial_mock.Serial.baudrate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <strong>baudrate</strong> we should operate at</p>
@@ -85,12 +97,6 @@
 <dt id="serial_mock.Serial.endline">
 <code class="descname">endline</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.endline" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>endline</strong> defines the character to output after our response but before our prompt</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="serial_mock.Serial.data">
-<code class="descname">data</code><em class="property"> = {}</em><a class="headerlink" href="#serial_mock.Serial.data" title="Permalink to this definition">¶</a></dt>
-<dd><p>any keys defined in <strong>data</strong> will automatically have getters or setters created for them</p>
 </dd></dl>
 
 <dl class="method">
@@ -166,7 +172,7 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Serial Mock&#8217;s documentation!</a></li>
+      <li>Previous: <a href="nullmodem.html" title="previous chapter">Setting up a Null Modem</a></li>
       <li>Next: <a href="decorators.html" title="next chapter">SerialMock <cite>SerialQuery</cite> Decorator</a></li>
   </ul></li>
 </ul>
