@@ -29,10 +29,6 @@ where **COMPORT** is one half of a pair of ports specified when you created a nu
 
 
 
-Linux : socat
--------------
-
-Install socat with :code:`apt-get install socat`
 
 
 
