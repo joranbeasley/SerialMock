@@ -85,9 +85,9 @@ if __name__ == "__main__":
 
     print args
     if "COM1" in args and "COM2" in args:
-        BridgeSerial(args.COM, args.bridge_to, logfile=args.logfile, delimiter=args.delimiter, endline=args.endline).MainLoop()
+        BridgeSerial(args.COM1, args.COM2, logfile=args.logfile, delimiter=args.delimiter, endline=args.endline).MainLoop()
     elif "COM1" in args:
-        EchoSerial(args.COM).MainLoop()
+        EchoSerial(args.COM1).MainLoop()
     elif "bridge_file" in args:
         convertBridgeFileToInterface(args.bridge_file,args.out)
 
