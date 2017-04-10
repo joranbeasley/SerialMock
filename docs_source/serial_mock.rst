@@ -2,8 +2,6 @@
 SerialMock `Serial` Base Class
 ==============================
 
-.. image:: _static/comm_diagram.png
-
 .. autoclass:: serial_mock.Serial
     :members:
     :undoc-members:
