@@ -10,6 +10,9 @@ import traceback
 import serial
 import re
 import time
+
+import sys
+
 from serial_mock.decorators import QueryStore
 
 
@@ -19,6 +22,7 @@ class Serial(object):
     
     
     """
+    _hard_exit = False
     _LOCK = threading.Lock()
     #: any keys defined in **data** will automatically have getters or setters created for them
     data = {}
@@ -89,7 +93,10 @@ class Serial(object):
                     finally:
                         Serial._LOCK.release()
                 else:
+                    if Serial._hard_exit:
+                        sys.exit(0)
                     time.sleep(0.25)
+
         return my_iter()
 
 
@@ -120,7 +127,6 @@ class Serial(object):
         finally:
             self._LOCK.release()
 
-
     def MainLoop(self):
         """
         Mainloop will run forever serving the rules provided in the subclass to the bound pipe
@@ -129,7 +135,10 @@ class Serial(object):
         print "LISTENING ON:",self.stream
         while True:
             self.stream.write(self.prompt)
-            cmd = self._process_cmd(self._read_from_stream(self.stream,self.delimiter))
+            try:
+                cmd = self._process_cmd(self._read_from_stream(self.stream,self.delimiter))
+            except:
+                return
             self._write_to_stream(cmd)
 
 
