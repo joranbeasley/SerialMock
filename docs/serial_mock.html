@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Serial Mock 0.0.1a1 documentation" href="index.html" />
     <link rel="next" title="SerialMock SerialQuery Decorator" href="decorators.html" />
-    <link rel="prev" title="Setting up a Null Modem" href="nullmodem.html" />
+    <link rel="prev" title="Using the include CLI tool" href="cli_util.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -45,12 +45,12 @@
 <h1>SerialMock <cite>Serial</cite> Base Class<a class="headerlink" href="#serialmock-serial-base-class" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="serial_mock.Serial">
-<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">Serial</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#Serial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.Serial" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">Serial</code><span class="sig-paren">(</span><em>stream</em>, <em>logfile=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#Serial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.Serial" title="Permalink to this definition">¶</a></dt>
 <dd><div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Serial</span><span class="p">(</span><span class="s">&quot;COM99&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">MainLoop</span><span class="p">()</span> <span class="c"># run forever on COM99</span>
 </pre></div>
 </div>
 <p><strong>Serial(stream:string)</strong> instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
-<em>in general this class should not be directly invoked but should be subclassed</em></p>
+<em>in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file</em></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -59,10 +59,6 @@
 </tr>
 </tbody>
 </table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">examples</p>
-</div>
 <dl class="attribute">
 <dt id="serial_mock.Serial.data">
 <code class="descname">data</code><em class="property"> = {}</em><a class="headerlink" href="#serial_mock.Serial.data" title="Permalink to this definition">¶</a></dt>
@@ -88,8 +84,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="serial_mock.Serial.user_terminal">
-<code class="descname">user_terminal</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.user_terminal" title="Permalink to this definition">¶</a></dt>
+<dt id="serial_mock.Serial.delimiter">
+<code class="descname">delimiter</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.delimiter" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>user_terminal</strong> defines the character(or characters, or regexp, or list) of items that indicate our user has finished a command</p>
 </dd></dl>
 
@@ -98,6 +94,11 @@
 <code class="descname">endline</code><em class="property"> = '\r'</em><a class="headerlink" href="#serial_mock.Serial.endline" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>endline</strong> defines the character to output after our response but before our prompt</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="serial_mock.Serial.logfile">
+<code class="descname">logfile</code><em class="property"> = None</em><a class="headerlink" href="#serial_mock.Serial.logfile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="serial_mock.Serial.MainLoop">
@@ -109,9 +110,9 @@
 
 <dl class="class">
 <dt id="serial_mock.EmittingSerial">
-<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">EmittingSerial</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#EmittingSerial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.EmittingSerial" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">serial_mock.</code><code class="descname">EmittingSerial</code><span class="sig-paren">(</span><em>stream</em>, <em>logfile=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/serial_mock/mock.html#EmittingSerial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#serial_mock.EmittingSerial" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Serial(stream:string)</strong> instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
-<em>in general this class should not be directly invoked but should be subclassed</em></p>
+<em>in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file</em></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -120,10 +121,6 @@
 </tr>
 </tbody>
 </table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">examples</p>
-</div>
 <dl class="attribute">
 <dt id="serial_mock.EmittingSerial.emit">
 <code class="descname">emit</code><em class="property"> = 'EMIT MSG'</em><a class="headerlink" href="#serial_mock.EmittingSerial.emit" title="Permalink to this definition">¶</a></dt>
@@ -172,7 +169,7 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="nullmodem.html" title="previous chapter">Setting up a Null Modem</a></li>
+      <li>Previous: <a href="cli_util.html" title="previous chapter">Using the include CLI tool</a></li>
       <li>Next: <a href="decorators.html" title="next chapter">SerialMock <cite>SerialQuery</cite> Decorator</a></li>
   </ul></li>
 </ul>

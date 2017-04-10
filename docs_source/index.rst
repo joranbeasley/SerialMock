@@ -17,13 +17,13 @@ requirements
 
      - *in general you can use com0com for windows systems, and socat for *nix systems in order to create a software null modem*
 
-setting up a null modem
------------------------
-
 .. toctree::
    :maxdepth: 2
 
-   nullmodem
+   tools
+
+
+
 
 installation
 ------------

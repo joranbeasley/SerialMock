@@ -69,6 +69,7 @@
 <p>The <strong>route</strong> argument is the primary argument to this decorator and it is very flexible. by default it will convert the function name into a &#8220;serial query&#8221;</p>
 <div class="section" id="default-behavior">
 <h3>default behavior<a class="headerlink" href="#default-behavior" title="Permalink to this headline">¶</a></h3>
+<p>for most use cases the default behavior should be sufficient to meet your needs, if it doesnt, have no fear, explicitly declaring the route gives you near unlimmited flexibility</p>
 <div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@serial_query</span>
 <span class="gp">... </span><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="k">return</span> <span class="s">&quot;Info to show&quot;</span>
