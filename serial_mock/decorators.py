@@ -37,7 +37,8 @@ class QueryStore(object):
         :return: 
         '''
         if route is None:
-            route = func.__name__
+            route = re.sub("([a-z])([A-Z])",lambda m:" ".join(m.groups()).lower(),re.sub("_"," ",func.__name__))
+
         func.delay = delay
         QueryStore.__registered_routes[route] = func
         return func
