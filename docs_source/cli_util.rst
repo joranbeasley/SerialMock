@@ -59,7 +59,13 @@ the build directive can convert a logfile created with the :code:`bridge` direct
 
     python -m serial_mock.cli build serial_output.txt --out=MySerialDevice.py
 
+you can then serve your mocked serial port with
 
+.. code-block:: bash
+
+    python MySerialDevice.py COM100
+
+this will bind your mocked device to COM100, which will expose it at the other end of the null modem (COM99)
 
 * :ref:`genindex`
 * :ref:`search`
