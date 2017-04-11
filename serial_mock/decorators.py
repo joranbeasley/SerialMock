@@ -14,6 +14,7 @@ class QueryStore(object):
     ...
     
     """
+    target=None
     __keybinds__ = {
 
     }
@@ -66,9 +67,8 @@ class QueryStore(object):
             fn = QueryStore._find_key_binding(key)
         except:
             traceback.print_exc()
-        print "Found:",fn
         try:
-            fn()
+            fn(QueryStore.target)
         except:
             traceback.print_exc()
     def __new__(cls,*args,**kwargs):

@@ -128,7 +128,6 @@ class Serial(object):
         result =  QueryStore._find_key_binding(key.char)
         if not result:
             return
-
         result(self)
     def _write_to_stream(self,response):
         if not response:return
