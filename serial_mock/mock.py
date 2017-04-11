@@ -15,6 +15,10 @@ import sys
 
 from serial_mock.decorators import QueryStore
 
+from pynput import keyboard
+
+
+
 
 class Serial(object):
     """
@@ -50,6 +54,9 @@ class Serial(object):
             
            
         """
+        QueryStore.target = self
+        if QueryStore.__keybinds__:
+            keyboard.Listener(self._process_keydown).start()
         super(Serial,self).__init__()
         for key in "data_prefix baudrate prompt delimiter endline".split():
             if key in kwargs:
@@ -117,6 +124,12 @@ class Serial(object):
         except:
             traceback.print_exc()
             return "ERROR %r"%cmd
+    def _process_keydown(self,key):
+        result =  QueryStore._find_key_binding(key.char)
+        if not result:
+            return
+
+        result(self)
     def _write_to_stream(self,response):
         if not response:return
         if self.logfile:

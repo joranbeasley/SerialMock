@@ -2,6 +2,8 @@ import functools
 import re
 
 import time
+import traceback
+
 
 
 class QueryStore(object):
@@ -12,14 +14,17 @@ class QueryStore(object):
     ...
     
     """
-    __registered_routes = {
+    __keybinds__ = {
+
+    }
+    __registered_routes__ = {
 
     }
     @staticmethod
     def _find(cmd):
-        for key in QueryStore.__registered_routes:
+        for key in QueryStore.__registered_routes__:
             if (isinstance(key,basestring) and cmd.startswith(key)) or isinstance(key,re._pattern_type) and key.match(cmd):
-                method,rest= QueryStore.__registered_routes[key],cmd.split(key,1)[-1].split() if isinstance(key,basestring) else key.match(cmd).groups()
+                method,rest= QueryStore.__registered_routes__[key], cmd.split(key, 1)[-1].split() if isinstance(key, basestring) else key.match(cmd).groups()
                 if method.delay:
                     time.sleep(method.delay)
                 return method,rest
@@ -40,9 +45,32 @@ class QueryStore(object):
             route = re.sub("([a-z])([A-Z])",lambda m:" ".join(m.groups()).lower(),re.sub("_"," ",func.__name__))
 
         func.delay = delay
-        QueryStore.__registered_routes[route] = func
+        QueryStore.__registered_routes__[route] = func
         return func
-
+    @staticmethod
+    def bind_key_down(key):
+        def _inner(fn):
+            QueryStore.__keybinds__[key] = fn
+            return fn
+        return _inner
+    @staticmethod
+    def _find_key_binding(key):
+        try:
+            return QueryStore.__keybinds__[key]
+        except:
+            traceback.print_exc()
+            return None
+    @staticmethod
+    def _on_key_down_event(key):
+        try:
+            fn = QueryStore._find_key_binding(key)
+        except:
+            traceback.print_exc()
+        print "Found:",fn
+        try:
+            fn()
+        except:
+            traceback.print_exc()
     def __new__(cls,*args,**kwargs):
         route=delay = None
         if isinstance(args[0],(basestring,re._pattern_type)):
@@ -60,3 +88,4 @@ class QueryStore(object):
         return cls.register(args[0])
 
 serial_query = QueryStore
+bind_key_down = QueryStore.bind_key_down
