@@ -14,8 +14,8 @@ import time
 import sys
 
 from serial_mock.decorators import QueryStore
-
-from pynput import keyboard
+from serial_mock.kb_listen import KBListen
+#from pynput import keyboard
 
 
 
@@ -55,8 +55,8 @@ class Serial(object):
            
         """
         QueryStore.target = self
-        if QueryStore.__keybinds__:
-            keyboard.Listener(self._process_keydown).start()
+        self.kb = None
+            #keyboard.Listener(self._process_keydown).start()
         super(Serial,self).__init__()
         for key in "data_prefix baudrate prompt delimiter endline".split():
             if key in kwargs:
@@ -125,7 +125,7 @@ class Serial(object):
             traceback.print_exc()
             return "ERROR %r"%cmd
     def _process_keydown(self,key):
-        result =  QueryStore._find_key_binding(key.char)
+        result =  QueryStore._find_key_binding(key)
         if not result:
             return
         result(self)
@@ -144,12 +144,16 @@ class Serial(object):
         Mainloop will run forever serving the rules provided in the subclass to the bound pipe
         
         """
+        if QueryStore.__keybinds__:
+            self.kb = KBListen(self._process_keydown)
+            self.kb.Listen()
         print "LISTENING ON:",self.stream
         while True:
             self.stream.write(self.prompt)
             try:
                 cmd = self._process_cmd(self._read_from_stream(self.stream,self.delimiter))
             except:
+                self.kb.halt = True
                 return
             self._write_to_stream(cmd)
 
