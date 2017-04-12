@@ -48,12 +48,14 @@ class QueryStore(object):
         func.delay = delay
         QueryStore.__registered_routes__[route] = func
         return func
+
     @staticmethod
     def bind_key_down(key):
         def _inner(fn):
             QueryStore.__keybinds__[key] = fn
             return fn
         return _inner
+
     @staticmethod
     def _find_key_binding(key):
         try:
