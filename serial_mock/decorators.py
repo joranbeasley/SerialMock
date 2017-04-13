@@ -1,9 +1,12 @@
 import functools
+import os
 import re
+import sys
 
 import time
 import traceback
 
+from serial_mock.util import quiet_log
 
 
 class QueryStore(object):
@@ -23,14 +26,16 @@ class QueryStore(object):
     }
     @staticmethod
     def _find(cmd):
+
         for key in QueryStore.__registered_routes__:
-            if (isinstance(key,basestring) and cmd.startswith(key)) or isinstance(key,re._pattern_type) and key.match(cmd):
+            if (isinstance(key,basestring) and cmd.startswith(key)) or (isinstance(key,re._pattern_type) and key.match(cmd)):
                 method,rest= QueryStore.__registered_routes__[key], cmd.split(key, 1)[-1].split() if isinstance(key, basestring) else key.match(cmd).groups()
                 if method.delay:
                     time.sleep(method.delay)
+                quiet_log("Found Match For %r => %r\n Additional Argv: %r"%(cmd,key,rest))
                 return method,rest
-
-        raise KeyError
+        quiet_log("Unable To Locate Match For %r, options are %r"%(key,QueryStore.__registered_routes__.keys()))
+        raise KeyError("Unable To Find CMD %r"%cmd)
     @staticmethod
     def register(func,route=None,delay=None):
         '''
@@ -46,12 +51,15 @@ class QueryStore(object):
             route = re.sub("([a-z])([A-Z])",lambda m:" ".join(m.groups()).lower(),re.sub("_"," ",func.__name__))
 
         func.delay = delay
+        quiet_log("Registered Serial Comand %r"%route)
         QueryStore.__registered_routes__[route] = func
+
         return func
 
     @staticmethod
     def bind_key_down(key):
         def _inner(fn):
+            quiet_log("Bound KeyPress %r"%key)
             QueryStore.__keybinds__[key] = fn
             return fn
         return _inner
@@ -59,16 +67,17 @@ class QueryStore(object):
     @staticmethod
     def _find_key_binding(key):
         try:
-            return QueryStore.__keybinds__[key]
-        except:
-            traceback.print_exc()
+            fn = QueryStore.__keybinds__[key]
+            quiet_log("Trigger Keybind %r => %r"%(key,fn))
+            return fn
+        except KeyError:
             return None
     @staticmethod
     def _on_key_down_event(key):
         try:
             fn = QueryStore._find_key_binding(key)
         except:
-            traceback.print_exc()
+            pass
         try:
             fn(QueryStore.target)
         except:

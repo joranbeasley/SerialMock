@@ -16,8 +16,7 @@ import sys
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
 #from pynput import keyboard
-
-
+from serial_mock.util import quiet_log
 
 
 class Serial(object):
@@ -120,7 +119,10 @@ class Serial(object):
             traceback.print_exc()
             return "ERROR %r Not Found"%cmd
         try:
-            return method(self,*rest)
+            quiet_log("Call FN: %r"%method)
+            result = method(self,*rest)
+            quiet_log("GOR RESULT: %r"%result)
+            return result
         except:
             traceback.print_exc()
             return "ERROR %r"%cmd
