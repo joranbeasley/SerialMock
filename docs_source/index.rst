@@ -32,6 +32,7 @@ Installation
 | :code:`setup.py install`
 | or :code:`pip install .`
 | or install it from pipy with :code:`pip install serial_mock`
+| or directly from github :code:`pip install git+https://github.com/joranbeasley/SerialMock.git`
 
 
 
