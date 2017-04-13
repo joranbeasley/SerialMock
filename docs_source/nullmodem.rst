@@ -24,3 +24,9 @@ Linux : socat
 _____________
 
 Install socat with :code:`apt-get install socat`
+
+.. code-block:: bash
+
+   apt-get install socat
+   socat -d -d pty,raw,echo=0 pty,raw,echo=0
+   sudo ln -s /dev/pts/## /dev/ttyUSB0
