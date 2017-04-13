@@ -6,7 +6,8 @@ import sys
 import time
 import traceback
 
-from serial_mock.util import quiet_log
+import logging
+logger = logging.getLogger("serial_mock")
 
 
 class QueryStore(object):
@@ -32,9 +33,9 @@ class QueryStore(object):
                 method,rest= QueryStore.__registered_routes__[key], cmd.split(key, 1)[-1].split() if isinstance(key, basestring) else key.match(cmd).groups()
                 if method.delay:
                     time.sleep(method.delay)
-                quiet_log("Found Match For %r => %r\n Additional Argv: %r"%(cmd,key,rest))
+                logger.info("Found Match For %r => %r\n Additional Argv: %r"%(cmd,key,rest))
                 return method,rest
-        quiet_log("Unable To Locate Match For %r, options are %r"%(key,QueryStore.__registered_routes__.keys()))
+        logger.info("Unable To Locate Match For %r, options are %r"%(key,QueryStore.__registered_routes__.keys()))
         raise KeyError("Unable To Find CMD %r"%cmd)
     @staticmethod
     def register(func,route=None,delay=None):
@@ -51,7 +52,7 @@ class QueryStore(object):
             route = re.sub("([a-z])([A-Z])",lambda m:" ".join(m.groups()).lower(),re.sub("_"," ",func.__name__))
 
         func.delay = delay
-        quiet_log("Registered Serial Comand %r"%route)
+        logger.info("Registered Serial Comand %r"%route)
         QueryStore.__registered_routes__[route] = func
 
         return func
@@ -59,7 +60,7 @@ class QueryStore(object):
     @staticmethod
     def bind_key_down(key):
         def _inner(fn):
-            quiet_log("Bound KeyPress %r"%key)
+            logger.info("Bound KeyPress %r"%key)
             QueryStore.__keybinds__[key] = fn
             return fn
         return _inner
@@ -68,7 +69,7 @@ class QueryStore(object):
     def _find_key_binding(key):
         try:
             fn = QueryStore.__keybinds__[key]
-            quiet_log("Trigger Keybind %r => %r"%(key,fn))
+            logger.info("Trigger Keybind %r => %r"%(key,fn))
             return fn
         except KeyError:
             return None

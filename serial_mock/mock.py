@@ -15,8 +15,11 @@ import sys
 
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
-#from pynput import keyboard
-from serial_mock.util import quiet_log
+import logging
+logging.basicConfig(stream=sys.stdout,format="%(levelname)s:%(funcName)s %(lineno)d:  %(message)s")
+logger = logging.getLogger("serial_mock")
+
+
 
 
 class Serial(object):
@@ -94,7 +97,10 @@ class Serial(object):
                     try:
                         s += stream.read(stream.inWaiting())
                         if check_term(s,terminal):
+                            logger.debug("Response Complete(%s): %r (returning value)" % (stream.port, s))
                             return s
+
+                        logger.debug("Incomplete MSG(%s)(%r not found): %r (keep waiting)"%(stream.port,terminal,s))
 
                     finally:
                         Serial._LOCK.release()
@@ -119,9 +125,9 @@ class Serial(object):
             traceback.print_exc()
             return "ERROR %r Not Found"%cmd
         try:
-            quiet_log("Call FN: %r"%method)
+            logger.debug("calling function: %r"%method.__name__)
             result = method(self,*rest)
-            quiet_log("GOR RESULT: %r"%result)
+            logger.debug("%s returns: %r"%(method.__name__,result))
             return result
         except:
             traceback.print_exc()

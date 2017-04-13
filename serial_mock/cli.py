@@ -9,7 +9,8 @@ from serial_mock import Serial,serial_query
 import serial
 
 from serial_mock.util import convertBridgeFileToInterface
-
+import logging
+log = logging.getLogger("serial_mock")
 
 class EchoSerial(Serial):
     """
@@ -17,6 +18,7 @@ class EchoSerial(Serial):
     """
     @serial_query(re.compile("(.*)"))
     def echo(self,what):
+        log.debug("echo back:%r"%what)
         return what
 
 class BridgeSerial(object):
@@ -40,6 +42,7 @@ class BridgeSerial(object):
     def MainLoop2(self):
         while True:
             result = Serial._read_from_stream(self.bridge,self.endline)
+            log.info("Forward(%s->%s):%r" % (self.bridge.port,self.target.port,result))
             self.safe_log(">%r\n" % result)
             self.target.write(result)
 
@@ -50,6 +53,7 @@ class BridgeSerial(object):
         while True:
             try:
                 result = Serial._read_from_stream(self.target,self.delimiter)
+                log.info("Forward(%s->%s):%r" % (self.target.port, self.bridge.port, result))
                 self.safe_log("<%r\n" % result)
                 self.bridge.write(result)
             except:
@@ -80,9 +84,11 @@ if __name__ == "__main__":
     g2.set_defaults(which="g3")
     g3.add_argument("bridge_file",help="a logfile generated from the --bridge_to utility. this must be generated with the bridge logfile utility",type=file)
     g3.add_argument("--out",help="the output file to generate, defaults to stdout",default=sys.stdout)
-
+    parser.add_argument("-v","--verbose",help="verbose mode enabled",choices=["ERROR","WARN","DEBUG","INFO"],nargs="?")
     args = parser.parse_args()
-
+    if args.verbose:
+        print "SET LOG LEVEL:",args.verbose
+        log.setLevel(getattr(logging,args.verbose))
     if "COM1" in args and "COM2" in args:
         interface = BridgeSerial(args.COM1, args.COM2, logfile=args.logfile, delimiter=args.delimiter, endline=args.endline).MainLoop()
     elif "COM1" in args:
