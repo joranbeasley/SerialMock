@@ -21,6 +21,7 @@ if __name__ == "__main__":
    parser.add_argument("-v","--verbose",help="verbose mode enabled",choices=["ERROR","WARN","DEBUG","INFO"],nargs="?")
    args = parser.parse_args()
    if args.verbose:
+      print "SET LOG LEVEL:",args.verbose
       logger.setLevel(getattr(logging,args.verbose,logging.WARN))
    MySerial(args.COM_PORT).MainLoop()
 """
