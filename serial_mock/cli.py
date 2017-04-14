@@ -4,7 +4,7 @@ import sys
 import threading
 import traceback
 
-from serial_mock import Serial,serial_query
+from serial_mock import MockSerial,serial_query
 
 import serial
 
@@ -12,7 +12,7 @@ from serial_mock.util import convertBridgeFileToInterface
 import logging
 log = logging.getLogger("serial_mock")
 
-class EchoSerial(Serial):
+class EchoSerial(MockSerial):
     """
     simple example client
     """
@@ -41,7 +41,7 @@ class BridgeSerial(object):
                 self.fLock.release()
     def MainLoop2(self):
         while True:
-            result = Serial._read_from_stream(self.bridge,self.endline)
+            result = MockSerial._read_from_stream(self.bridge, self.endline)
             log.info("Forward(%s->%s):%r" % (self.bridge.port,self.target.port,result))
             self.safe_log(">%r\n" % result)
             self.target.write(result)
@@ -52,13 +52,13 @@ class BridgeSerial(object):
         th.start()
         while True:
             try:
-                result = Serial._read_from_stream(self.target,self.delimiter)
+                result = MockSerial._read_from_stream(self.target, self.delimiter)
                 log.info("Forward(%s->%s):%r" % (self.target.port, self.bridge.port, result))
                 self.safe_log("<%r\n" % result)
                 self.bridge.write(result)
             except:
                 traceback.print_exc()
-                Serial._hard_exit = True
+                MockSerial._hard_exit = True
                 th.join()
                 break
 

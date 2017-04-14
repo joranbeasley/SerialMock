@@ -36,7 +36,7 @@ class StreamHelper(object):
         s = ""
         while True:
             if stream.inWaiting():
-                Serial._LOCK.acquire()
+                MockSerial._LOCK.acquire()
                 try:
                     s += stream.read(stream.inWaiting())
                     if StreamHelper.check_term(s, terminal_condition):
@@ -46,15 +46,15 @@ class StreamHelper(object):
                     logger.debug("Incomplete MSG(%s)(%r not found): %r (keep waiting)" % (stream.port, terminal_condition, s))
 
                 finally:
-                    Serial._LOCK.release()
+                    MockSerial._LOCK.release()
             else:
-                if Serial._hard_exit:
+                if MockSerial._hard_exit:
                     sys.exit(0)
                 time.sleep(0.25)
 
-class Serial(object):
+class MockSerial(object):
     """
-    >>> Serial("COM99").MainLoop() # run forever on COM99
+    >>> MockSerial("COM99").MainLoop() # run forever on COM99
     
     
     """
@@ -90,7 +90,7 @@ class Serial(object):
         QueryStore.target = self
         self.kb = None
             #keyboard.Listener(self._process_keydown).start()
-        super(Serial,self).__init__()
+        super(MockSerial, self).__init__()
         for key in "data_prefix baudrate prompt delimiter endline".split():
             if key in kwargs:
                 setattr(self,key,kwargs.pop(key))
@@ -169,6 +169,9 @@ class Serial(object):
 
 
 class DummySerial(serial.Serial):
+    '''
+    DummySerial provides a serial.Serial interface into a MockSerial instance
+    '''
     is_open = True
     _port_handle = None
     def __init__(self,MockSerialClass):
@@ -203,7 +206,7 @@ class DummySerial(serial.Serial):
         resp,self.tx_buffer =self.tx_buffer[:bytes],self.tx_buffer[bytes:]
         return resp
 
-class EmittingSerial(Serial):
+class EmittingSerial(MockSerial):
     emit = "EMIT MSG"
     delay = 5,35
     interval = 15,35
@@ -215,11 +218,11 @@ class EmittingSerial(Serial):
     def MainLoop(self):
         print "MainLoop"
         threading.Timer(random.uniform(*self.delay), self._on_start_emit).start()
-        Serial.MainLoop(self)
+        MockSerial.MainLoop(self)
 
 
 if __name__ == "__main__":
-    class TestClass(Serial):
+    class TestClass(MockSerial):
         @QueryStore("hello")
         def say_hello(self,name="BOB"):
             return "Hello, %s"%name
