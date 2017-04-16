@@ -23,10 +23,34 @@ logger = logging.getLogger("serial_mock")
 class _StreamHelper(object):
     @staticmethod
     def check_term(s, check_item):
+        r"""
+        >>> _StreamHelper.check_term("asdasdaQ","Q")
+        True
+        >>> _StreamHelper.check_term("asdasdaQ","\r")
+        False
+        >>> import re
+        >>> _StreamHelper.check_term("asdasdaQ",re.compile("[a-z]([A-Z].*)"))
+        True
+        >>> _StreamHelper.check_term("asdasdaQ",re.compile("[0-9]([A-Z].*)"))
+        False
+        >>> _StreamHelper.check_term("asdasdaQ",['q','Q'])
+        True
+        >>> _StreamHelper.check_term("asdasdaQ",['q','Z'])
+        False
+        >>> try: _StreamHelper.check_term("asdasdaQ",True)
+        ... except Exception as e: print e
+        ...
+        Unknown Terminal Condition:True
+        
+        :param s: the string so far to check 
+        :param check_item: the condition
+        :return: True or False depending on if the condition is met
+        
+        """
         if isinstance(check_item, basestring):
             return s.endswith(check_item)
         elif isinstance(check_item, re._pattern_type):
-            return check_item.match(s)
+            return bool(check_item.search(s))
         elif isinstance(check_item, (list, tuple)):
             return any(_StreamHelper.check_term(s, itm) for itm in check_item)
         else:
