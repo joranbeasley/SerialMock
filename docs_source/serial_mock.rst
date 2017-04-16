@@ -1,12 +1,31 @@
 
-SerialMock `Serial` Base Class
-==============================
+serial_mock API
+===============
 
 .. image:: _static/comm_diagram.png
 
-.. autoclass:: serial_mock.Serial
+
+MockSerial Class
+----------------
+
+
+.. autoclass:: serial_mock.MockSerial
     :members:
     :undoc-members:
+
+
+DummySerial Class
+-----------------
+
+
+.. autoclass:: serial_mock.DummySerial
+    :members:
+    :undoc-members:
+
+
+EmittingSerial Class
+--------------------
+
 
 .. autoclass:: serial_mock.EmittingSerial
     :members:
@@ -14,7 +33,7 @@ SerialMock `Serial` Base Class
 
 
 Indices and tables
-------------------
+
 
 * :ref:`genindex`
 * :ref:`search`

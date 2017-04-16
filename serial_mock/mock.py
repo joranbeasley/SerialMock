@@ -20,7 +20,7 @@ logging.basicConfig(stream=sys.stdout,format="%(levelname)s:%(funcName)s %(linen
 logger = logging.getLogger("serial_mock")
 
 
-class StreamHelper(object):
+class _StreamHelper(object):
     @staticmethod
     def check_term(s, check_item):
         if isinstance(check_item, basestring):
@@ -28,7 +28,7 @@ class StreamHelper(object):
         elif isinstance(check_item, re._pattern_type):
             return check_item.match(s)
         elif isinstance(check_item, (list, tuple)):
-            return any(StreamHelper.check_term(s, itm) for itm in check_item)
+            return any(_StreamHelper.check_term(s, itm) for itm in check_item)
         else:
             raise Exception("Unknown Terminal Condition:%r" % check_item)
     @staticmethod
@@ -39,7 +39,7 @@ class StreamHelper(object):
                 MockSerial._LOCK.acquire()
                 try:
                     s += stream.read(stream.inWaiting())
-                    if StreamHelper.check_term(s, terminal_condition):
+                    if _StreamHelper.check_term(s, terminal_condition):
                         logger.debug("Response Complete(%s): %r (returning value)" % (stream.port, s))
                         return s
 
@@ -54,7 +54,7 @@ class StreamHelper(object):
 
 class MockSerial(object):
     """
-    >>> MockSerial("COM99").MainLoop() # run forever on COM99
+    
     
     
     """
@@ -79,14 +79,27 @@ class MockSerial(object):
 
     def __init__(self,stream,logfile=None,**kwargs):
         """
-            **Serial(stream:string)** instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
+            **MockSerial(stream:string)** instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
             *in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file*
+            
+            >>> from serial_mock.decorators import serial_query
+            >>> from serial_mock.mock import MockSerial
+            >>> class SimpleSerial(MockSerial):
+            ...     @serial_query("trigger command")
+            ...     def do_something(self,requiredArg,optionalArg="0"):
+            ...         return "RESULT: %r %r"%(requiredArg,optionalArg)
+            ...
+            >>> mock = SimpleSerial("DEBUG")            
+            >>> mock.process_cmd("trigger command 1")
+            "RESULT: '1' '0'"
+            >>> mock.process_cmd("trigger command 1 2")
+            "RESULT: '1' '2'"
 
-            :param stream: a path to a pipe (ie "/dev/ttyS99","COM11")
-            :param data_prefix: the separator between getters/setters and the data_attribute they reference
-            :
+            :param stream: a path to a pipe (ie "/dev/ttyS99","COM11"), a stream like object, or "DEBUG"
+            :param data_prefix: the separator between getters/setters and the data_attribute they reference            
            
         """
+
         QueryStore.target = self
         self.kb = None
             #keyboard.Listener(self._process_keydown).start()
@@ -98,7 +111,7 @@ class MockSerial(object):
         self.stream = stream
         if logfile:
             self.logfile = open(logfile,"wb")
-        if isinstance(stream,basestring):
+        if isinstance(stream,basestring) and not stream == "DEBUG":
             try:
                 self.stream = serial.Serial(stream,self.baudrate)
             except:
@@ -107,14 +120,30 @@ class MockSerial(object):
         for k in self.data:
             QueryStore.register(lambda self,k=k:self.data.get(k,"None"),"get -%s"%k)
             QueryStore.register(lambda self,value,k=k:self.data.update({k:value}) or "OK","set -%s"%k)
-
-        assert hasattr(self.stream,"read") and hasattr(self.stream,"write"),"STREAM must provide a minimum of read and write"
+        if self.stream is "DEBUG":
+            logger.warn("Running in debug mode you may not run MainLoop!")
+        else:
+            assert hasattr(self.stream,"read") and hasattr(self.stream,"write"),"STREAM must provide a minimum of read and write"
     @staticmethod
     def _read_from_stream(stream,terminal):
-        return StreamHelper.read_until(stream,terminal)
+        return _StreamHelper.read_until(stream, terminal)
 
 
-    def _process_cmd(self,cmd):
+    def process_cmd(self, cmd):
+        """
+        looks up a command to see if its registered. and returns the result if it is otherwise returns an error string
+        in general this command should not be invoked directly (but it can be...)
+        
+        >>> from serial_mock.mock import MockSerial
+        >>> inst = MockSerial("DEBUG") 
+        >>> inst.process_cmd("a")
+        "ERROR 'a' Not Found"
+                        
+        :param cmd: the command to process  
+        :return: a string (the result of the command)
+        
+        """
+
         cmd = re.sub(".\x08","",cmd.strip())
         if self.logfile:
             self.logfile.write("<%r\n"%(cmd,))
@@ -146,6 +175,11 @@ class MockSerial(object):
         self._LOCK.acquire()
         try:
             self.stream.write("%s%s"%(response,self.endline))
+        except:
+            if self.stream == "DEBUG":
+                print("%s%s"%(response,self.endline))
+            else:
+                raise
         finally:
             self._LOCK.release()
 
@@ -154,6 +188,7 @@ class MockSerial(object):
         Mainloop will run forever serving the rules provided in the subclass to the bound pipe
         
         """
+        assert self.stream != "DEBUG"
         if QueryStore.__keybinds__:
             self.kb = KBListen(self._process_keydown)
             self.kb.Listen()
@@ -161,7 +196,7 @@ class MockSerial(object):
         while True:
             self.stream.write(self.prompt)
             try:
-                cmd = self._process_cmd(self._read_from_stream(self.stream,self.delimiter))
+                cmd = self.process_cmd(self._read_from_stream(self.stream, self.delimiter))
             except:
                 self.kb.halt = True
                 return
@@ -169,11 +204,38 @@ class MockSerial(object):
 
 
 class DummySerial(serial.Serial):
-    '''
-    DummySerial provides a serial.Serial interface into a MockSerial instance
-    '''
+    r"""
+    DummySerial provides a serial.Serial interface into a MockSerial instance. you can use this as a dropin replacement to serial.Serial, for anything that accepts serial.Serial as an argument
+    
+    >>> from serial_mock.mock import DummySerial,MockSerial
+    >>> from serial_mock.decorators import serial_query
+    >>> class MyInterface(MockSerial):
+    ...     @serial_query("trigger command")
+    ...     def do_something(self,requiredArg,optionalArg="0"):
+    ...         return "RESULT: %r %r"%(requiredArg,optionalArg)
+    ...
+    >>> ser = DummySerial(MyInterface)
+    >>> ser.write("trigger command 5\r")
+    18L
+    >>> ser.read(ser.inWaiting())    
+    "RESULT: '5' '0'\r>"
+    >>> ser.write("trigger command 1 2\r")
+    20L
+    >>> ser.read(ser.inWaiting())
+    "RESULT: '1' '2'\r>"
+    
+    """
+
     is_open = True
     _port_handle = None
+    _baudrate = "ANY"
+    _bytesize = "ANY"
+    _parity = "ANY"
+    _stopbits = 1
+    _timeout = None
+    _xonxoff = None
+    _rtscts = None
+    _dsrdtr = None
     def __init__(self,MockSerialClass):
         self.myMock = MockSerialClass(StringIO())
         self.rx_buffer = ""
@@ -194,14 +256,13 @@ class DummySerial(serial.Serial):
 
     def write(self,msg):
         self.rx_buffer += msg
-        if StreamHelper.check_term(self.rx_buffer,self.rx_buffer):
-            self.myMock._write_to_stream(self.myMock._process_cmd(self.rx_buffer))
+        if _StreamHelper.check_term(self.rx_buffer, self.rx_buffer):
+            self.myMock._write_to_stream(self.myMock.process_cmd(self.rx_buffer))
             self.myMock.stream.seek(0)
             self.tx_buffer += self.myMock.stream.read() + self.myMock.prompt
-
+            self.myMock.stream.truncate(0)
             self.rx_buffer = ""
         return long(len(msg))
-
     def read(self,bytes=1):
         resp,self.tx_buffer =self.tx_buffer[:bytes],self.tx_buffer[bytes:]
         return resp
@@ -210,13 +271,26 @@ class EmittingSerial(MockSerial):
     emit = "EMIT MSG"
     delay = 5,35
     interval = 15,35
+
+    def __init__(self, stream, logfile=None, **kwargs):
+        """
+            **EmmitingSerial(stream:string)** provides a reference class on an interface that periodically emits a "heartbeat" type message 
+
+
+            :param stream: a path to a pipe (ie "/dev/ttyS99","COM11"), a stream like object, or "DEBUG"
+            :param data_prefix: the separator between getters/setters and the data_attribute they reference            
+
+        """
+
+        super(EmittingSerial, self).__init__(stream, logfile, **kwargs)
+
     def _on_start_emit(self):
         threading.Timer(random.uniform(*self.interval),self._on_emit).start()
+
     def _on_emit(self):
         self._write_to_stream(self.emit)
         self._on_start_emit()
     def MainLoop(self):
-        print "MainLoop"
         threading.Timer(random.uniform(*self.delay), self._on_start_emit).start()
         MockSerial.MainLoop(self)
 
@@ -228,7 +302,7 @@ if __name__ == "__main__":
             return "Hello, %s"%name
 
     d = DummySerial(TestClass)
-    print isinstance(d,serial.Serial)
+    print isinstance(d,serial.Serial),d
     print "sent:",repr(d.write("hello joey\r"))
-    print "RECV:",repr(d.read(100))
+    print "RECV:",repr(d.read(d.inWaiting()))
 
