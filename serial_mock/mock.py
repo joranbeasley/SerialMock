@@ -62,7 +62,7 @@ class _StreamHelper(object):
             if stream.inWaiting():
                 MockSerial._LOCK.acquire()
                 try:
-                    s += stream.read(stream.inWaiting())
+                    s += stream.read(1)
                     if _StreamHelper.check_term(s, terminal_condition):
                         logger.debug("Response Complete(%s): %r (returning value)" % (stream.port, s))
                         return s
