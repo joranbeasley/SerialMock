@@ -5,9 +5,10 @@ import sys
 
 setup(
     name='serial_mock',
-    version='0.0.1',
+    version='0.0.2',
     packages=['serial_mock'],
-    url='',
+    url='http://serialmock.readthedocs.io/en/latest/',
+    download_url="https://github.com/joranbeasley/SerialMock",
     license='MIT',
     author='Joran Beasley',
     author_email='joranbeasley',
