@@ -12,12 +12,45 @@ import re
 import time
 
 import sys
-
+from cStringIO import StringIO
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
-#from pynput import keyboard
-from serial_mock.util import quiet_log
+import logging
+logging.basicConfig(stream=sys.stdout,format="%(levelname)s:%(funcName)s %(lineno)d:  %(message)s")
+logger = logging.getLogger("serial_mock")
 
+
+class StreamHelper(object):
+    @staticmethod
+    def check_term(s, check_item):
+        if isinstance(check_item, basestring):
+            return s.endswith(check_item)
+        elif isinstance(check_item, re._pattern_type):
+            return check_item.match(s)
+        elif isinstance(check_item, (list, tuple)):
+            return any(StreamHelper.check_term(s, itm) for itm in check_item)
+        else:
+            raise Exception("Unknown Terminal Condition:%r" % check_item)
+    @staticmethod
+    def read_until(stream, terminal_condition):
+        s = ""
+        while True:
+            if stream.inWaiting():
+                Serial._LOCK.acquire()
+                try:
+                    s += stream.read(stream.inWaiting())
+                    if StreamHelper.check_term(s, terminal_condition):
+                        logger.debug("Response Complete(%s): %r (returning value)" % (stream.port, s))
+                        return s
+
+                    logger.debug("Incomplete MSG(%s)(%r not found): %r (keep waiting)" % (stream.port, terminal_condition, s))
+
+                finally:
+                    Serial._LOCK.release()
+            else:
+                if Serial._hard_exit:
+                    sys.exit(0)
+                time.sleep(0.25)
 
 class Serial(object):
     """
@@ -50,7 +83,8 @@ class Serial(object):
             *in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file*
 
             :param stream: a path to a pipe (ie "/dev/ttyS99","COM11")
-            
+            :param data_prefix: the separator between getters/setters and the data_attribute they reference
+            :
            
         """
         QueryStore.target = self
@@ -61,7 +95,7 @@ class Serial(object):
             if key in kwargs:
                 setattr(self,key,kwargs.pop(key))
 
-        self.stream = None
+        self.stream = stream
         if logfile:
             self.logfile = open(logfile,"wb")
         if isinstance(stream,basestring):
@@ -69,6 +103,7 @@ class Serial(object):
                 self.stream = serial.Serial(stream,self.baudrate)
             except:
                 raise Exception("Unable To Bind To %r"%stream)
+
         for k in self.data:
             QueryStore.register(lambda self,k=k:self.data.get(k,"None"),"get -%s"%k)
             QueryStore.register(lambda self,value,k=k:self.data.update({k:value}) or "OK","set -%s"%k)
@@ -76,34 +111,7 @@ class Serial(object):
         assert hasattr(self.stream,"read") and hasattr(self.stream,"write"),"STREAM must provide a minimum of read and write"
     @staticmethod
     def _read_from_stream(stream,terminal):
-        def check_term(s,check_item):
-            if isinstance(check_item,basestring):
-                return s.endswith(check_item)
-            elif isinstance(check_item,re._pattern_type):
-                return check_item.match(s)
-            elif isinstance(check_item,(list,tuple)):
-                return any(check_term(s,itm) for itm in check_item)
-            else:
-                raise Exception("Unknown Terminal Condition:%r"%check_item)
-
-        def my_iter():
-            s = ""
-            while True:
-                if stream.inWaiting():
-                    Serial._LOCK.acquire()
-                    try:
-                        s += stream.read(stream.inWaiting())
-                        if check_term(s,terminal):
-                            return s
-
-                    finally:
-                        Serial._LOCK.release()
-                else:
-                    if Serial._hard_exit:
-                        sys.exit(0)
-                    time.sleep(0.25)
-
-        return my_iter()
+        return StreamHelper.read_until(stream,terminal)
 
 
     def _process_cmd(self,cmd):
@@ -119,9 +127,9 @@ class Serial(object):
             traceback.print_exc()
             return "ERROR %r Not Found"%cmd
         try:
-            quiet_log("Call FN: %r"%method)
+            logger.debug("calling function: %r"%method.__name__)
             result = method(self,*rest)
-            quiet_log("GOR RESULT: %r"%result)
+            logger.debug("%s returns: %r"%(method.__name__,result))
             return result
         except:
             traceback.print_exc()
@@ -160,6 +168,41 @@ class Serial(object):
             self._write_to_stream(cmd)
 
 
+class DummySerial(serial.Serial):
+    is_open = True
+    _port_handle = None
+    def __init__(self,MockSerialClass):
+        self.myMock = MockSerialClass(StringIO())
+        self.rx_buffer = ""
+        self.tx_buffer = ""
+        self.port = "MOC1"
+        self.is_open = True
+
+    def open(self):
+        return True
+    def close(self):
+        return True
+    @property
+    def in_waiting(self):
+        return self.inWaiting()
+
+    def inWaiting(self):
+        return len(self.tx_buffer)
+
+    def write(self,msg):
+        self.rx_buffer += msg
+        if StreamHelper.check_term(self.rx_buffer,self.rx_buffer):
+            self.myMock._write_to_stream(self.myMock._process_cmd(self.rx_buffer))
+            self.myMock.stream.seek(0)
+            self.tx_buffer += self.myMock.stream.read() + self.myMock.prompt
+
+            self.rx_buffer = ""
+        return long(len(msg))
+
+    def read(self,bytes=1):
+        resp,self.tx_buffer =self.tx_buffer[:bytes],self.tx_buffer[bytes:]
+        return resp
+
 class EmittingSerial(Serial):
     emit = "EMIT MSG"
     delay = 5,35
@@ -175,4 +218,14 @@ class EmittingSerial(Serial):
         Serial.MainLoop(self)
 
 
+if __name__ == "__main__":
+    class TestClass(Serial):
+        @QueryStore("hello")
+        def say_hello(self,name="BOB"):
+            return "Hello, %s"%name
+
+    d = DummySerial(TestClass)
+    print isinstance(d,serial.Serial)
+    print "sent:",repr(d.write("hello joey\r"))
+    print "RECV:",repr(d.read(100))
 

@@ -16,6 +16,9 @@ CLI commands
 
 to view help on a given command simply invoke the command with the :code:`-h` or :code:`--help` switch
 
+you can optionally specify a verbosity level for screen output with :code:`-v <LOGLEVEL>` **BEFORE** you invoke the {echo,bridge,build} command, this can be helpful for debugging
+
+
 echo directive
 ______________
 
