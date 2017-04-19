@@ -1,6 +1,6 @@
 
-SerialMock `SerialQuery` Decorator
-==================================
+serial_mock `serial_query` Decorator
+====================================
 
 .. py:decoratormethod:: serial_mock.serial_query(route=None,delay=None)
 
@@ -95,6 +95,26 @@ Examples
         @serial_query("long scan",delay=5) # this time we will do a long scan with a delay of 5 seconds
         def do_long_scan(): # the decorator will take care of the delay for us
             return self.do_scan() # note that the decorator leaves the original function unaffected
+
+
+serial_mock `bind_key_down` Decorator
+=====================================
+
+the :code:`@bind_key_down` decorator allows you to bind a function to a keypress, this can be usefull to perform sporatic actions (like incrementing an id)
+
+.. code-block:: python
+
+    class MyInterface(SerialMock):
+         current_id = 1
+         @serial_query("get -record_id")
+         def get_id(self):
+             return "%s"%self.current_id
+
+         @bind_key_down("a")
+         def increment_id(self):
+             self.current_id += 1
+
+in this example when the user presses 'a' the current_id attribute will increase by one. and the next time "get -record_id" is invoked the new current_id is returned to the client.
 
 Indices and tables
 ------------------

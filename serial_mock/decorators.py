@@ -35,7 +35,7 @@ class QueryStore(object):
                     time.sleep(method.delay)
                 logger.info("Found Match For %r => %r\n Additional Argv: %r"%(cmd,key,rest))
                 return method,rest
-        logger.info("Unable To Locate Match For %r, options are %r"%(key,QueryStore.__registered_routes__.keys()))
+        logger.info("Unable To Locate Match For %r, options are %r"%(cmd,QueryStore.__registered_routes__.keys()))
         raise KeyError("Unable To Find CMD %r"%cmd)
     @staticmethod
     def register(func,route=None,delay=None):
