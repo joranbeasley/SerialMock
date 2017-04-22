@@ -1,7 +1,7 @@
 SerialMock
 ==========
 
-[READ THE DOCS](https://serialmock.rtfd.org)
+[READ THE DOCS](http://serialmock.rtfd.org)
 --------------------------------------------
 
 A library to mock serial ports... designed with developers in mind.
