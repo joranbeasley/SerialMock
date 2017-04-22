@@ -1,7 +1,7 @@
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y socat
-  - sudo pip install pyserial
+  - sudo pip install pyserial nose coverage
 script:
-  - echo OK
-  - env
+  - nosetests --with-coverage --cover-package=serial_mock tests
+  
