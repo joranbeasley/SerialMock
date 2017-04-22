@@ -4,4 +4,3 @@ before_install:
   - sudo pip install pyserial nose coverage
 script:
   - nosetests --with-coverage --cover-package=serial_mock tests
-  

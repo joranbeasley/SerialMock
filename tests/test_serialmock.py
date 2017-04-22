@@ -2,16 +2,27 @@ import unittest
 
 import time
 
+from subprocess import Popen,PIPE
+
+def getPortTunnelLinux():
+    cmd = "socat -d -d pty,raw,echo=0 pty,raw,echo=0 2>&1"
+    proc = Popen(cmd,stdout=PIPE,stderr=PIPE,shell=True)
+    ports = []
+    for line in iter(proc.stdout.readline,""):
+        ports.append(line.strip().rsplit(" ",1)[-1])
+        if len(ports) == 2: return ports
+
 
 def getPortTunnelWindows():
     return "COM199 COM200".split()
-def getPortTunnelLinux():
-    return "COM99 COM100".split()
+
+
 def getPortTunnel():
     import os
     if os.name == "nt":
         return getPortTunnelWindows()
     return getPortTunnelLinux()
+
 
 class SerialMockBoundTestCase(unittest.TestCase):
     def setUp(self):
