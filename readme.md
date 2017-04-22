@@ -1,6 +1,9 @@
 SerialMock
 ==========
 
+[READ THE DOCS](https://serialmock.rtfd.org)
+--------------------------------------------
+
 A library to mock serial ports... designed with developers in mind.
 
 In order to create a mock serial port you must know enough about its protocol to replicate it to some extent
