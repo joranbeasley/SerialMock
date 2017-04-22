@@ -15,7 +15,6 @@ import time
 import sys
 from cStringIO import StringIO
 
-import signal
 
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
@@ -129,6 +128,10 @@ class MockSerial(object):
         """
             **MockSerial(stream:string)** instanciates a new MockStreamTunnel, stream should point to the comm port to listen on. 
             *in general this class should not be directly invoked but should be subclassed, you can find some examples in the examples folder, or in the cli.py file*
+
+            :param stream: a path to a pipe (ie "/dev/ttyS99","COM11"), a stream like object, or "DEBUG"
+            :param data_prefix: the separator between getters/setters and the data_attribute they reference            
+
             
             >>> from serial_mock.decorators import serial_query
             >>> from serial_mock.mock import MockSerial
@@ -167,8 +170,6 @@ class MockSerial(object):
             >>> mock.process_cmd("get -x")
             '10'
             
-            :param stream: a path to a pipe (ie "/dev/ttyS99","COM11"), a stream like object, or "DEBUG"
-            :param data_prefix: the separator between getters/setters and the data_attribute they reference            
            
         """
         self.running = False
