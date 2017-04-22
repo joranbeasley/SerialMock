@@ -1,6 +1,8 @@
 SerialMock
 ==========
 
+[![Build Status](https://travis-ci.org/joranbeasley/SerialMock.svg?branch=master)](https://travis-ci.org/joranbeasley/SerialMock)
+
 [READ THE DOCS](http://serialmock.rtfd.org)
 --------------------------------------------
 
