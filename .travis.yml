@@ -4,3 +4,4 @@ before_install:
   - sudo pip install pyserial
 script:
   - echo OK
+  - env
