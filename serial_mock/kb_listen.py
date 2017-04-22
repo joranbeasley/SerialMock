@@ -1,5 +1,6 @@
 import os,sys
 import threading
+import logging
 
 import time
 import atexit
@@ -13,12 +14,17 @@ else:
     import termios
 
     import tty
-    old_settings = termios.tcgetattr(sys.stdin)
-    atexit.register(lambda:termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings))
-    tty.setcbreak(sys.stdin.fileno())
-    def get_key_press():
-        if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-            return sys.stdin.read(1)
+    try:
+        old_settings = termios.tcgetattr(sys.stdin)
+    except:
+        logging.getLogger("serial_mock").warn("No keyboard listeners available :(")
+        get_key_press = lambda :1
+    else:
+        atexit.register(lambda:termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings))
+        tty.setcbreak(sys.stdin.fileno())
+        def get_key_press():
+            if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+                return sys.stdin.read(1)
 
 class KBListen:
     def __init__(self,on_key_handler):
