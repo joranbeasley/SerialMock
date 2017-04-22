@@ -12,9 +12,9 @@ In order to create a mock serial port you must know enough about its protocol to
 
 ```python
 import sys
-from serial_mock import Serial,serial_query
+from serial_mock import MockSerial,serial_query
 
-class MyRS232Device(Serial):
+class MyRS232Device(MockSerial):
      #this will provide interfaces "get offset","set offset <value>"
      data = {"offset":0.5}
      current_reading = 3.1

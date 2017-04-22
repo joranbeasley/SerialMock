@@ -26,7 +26,10 @@ class BridgeSerial(object):
     fLock = threading.Lock()
     def __init__(self,port1,port2,logfile,delimiter="\r",endline=">"):
         super(BridgeSerial,self).__init__()
-        self.logfile = open(logfile,"wb",buffering=0)
+        if isinstance(logfile,basestring):
+            self.logfile = open(logfile,"wb",buffering=0)
+        else:
+            self.logfile = logfile
         self.delimiter=delimiter
         self.endline = endline
         self.target = serial.Serial(port1)
@@ -79,7 +82,7 @@ if __name__ == "__main__":
     g2.add_argument("COM2",help='the port to bridge to')
     g2.add_argument("-d","--delimiter",help="the command delimiter for reads",default="\r")
     g2.add_argument("-e","--endline",help="the command delimiter for responses",default=">")
-    g2.add_argument("-L",'--logfile',help='this will log all incomming and outgoing messages, this can be used with the build subcommand')
+    g2.add_argument("-L",'--logfile',help='this will log all incomming and outgoing messages, this can be used with the build subcommand',default=sys.stdout)
     g3 = subparsers.add_parser("build",help="build a serialport emulator from a logfile generated from the bridge utility")
     g2.set_defaults(which="g3")
     g3.add_argument("bridge_file",help="a logfile generated from the --bridge_to utility. this must be generated with the bridge logfile utility",type=file)
