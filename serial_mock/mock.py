@@ -6,6 +6,7 @@ note that **data** is a special attribute and any keys passed into it will autom
 import random
 import threading
 import traceback
+from itertools import cycle
 
 import serial
 import re
@@ -13,6 +14,9 @@ import time
 
 import sys
 from cStringIO import StringIO
+
+import signal
+
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
 import logging
@@ -21,6 +25,7 @@ logger = logging.getLogger("serial_mock")
 
 
 class _StreamHelper(object):
+    _exit = False
     @staticmethod
     def check_term(s, check_item):
         r"""
@@ -57,18 +62,38 @@ class _StreamHelper(object):
             raise Exception("Unknown Terminal Condition:%r" % check_item)
     @staticmethod
     def read_until(stream, terminal_condition):
+        r"""
+        reads a stream until a terminal condition is met 
+        
+        >>> from cStringIO import StringIO
+        >>> s = StringIO("Hello World\rBob")
+        >>> _StreamHelper.read_until(s,"\r")
+        'Hello World\r'
+        >>> s.seek(0)
+        >>> import re
+        >>> _StreamHelper.read_until(s,re.compile("\s[A-C]"))
+        'Hello World\rB'
+        >>> s.seek(0)
+        >>> _StreamHelper.read_until(s,re.compile("\s[C-Z]"))
+        'Hello W'
+        
+        :param stream: 
+        :param terminal_condition: 
+        :return: 
+        """
         s = ""
-        while True:
-            if stream.inWaiting():
+        _StreamHelper._exit=False
+        while not _StreamHelper._exit:
+
+            if s and _StreamHelper.check_term(s, terminal_condition):
+                logger.debug("Response Complete(%s): %r (returning value)" % (getattr(stream, 'port', stream), s))
+                return s
+            elif s:
+                logger.debug("Incomplete MSG(%s)(%r not found): %r (keep waiting)" % (getattr(stream, "port", stream), terminal_condition, s))
+            if not hasattr(stream,"inWaiting") or stream.inWaiting():
                 MockSerial._LOCK.acquire()
                 try:
                     s += stream.read(1)
-                    if _StreamHelper.check_term(s, terminal_condition):
-                        logger.debug("Response Complete(%s): %r (returning value)" % (stream.port, s))
-                        return s
-
-                    logger.debug("Incomplete MSG(%s)(%r not found): %r (keep waiting)" % (stream.port, terminal_condition, s))
-
                 finally:
                     MockSerial._LOCK.release()
             else:
@@ -77,11 +102,6 @@ class _StreamHelper(object):
                 time.sleep(0.25)
 
 class MockSerial(object):
-    """
-    
-    
-    
-    """
     _hard_exit = False
     _LOCK = threading.Lock()
     #: any keys defined in **data** will automatically have getters or setters created for them
@@ -99,6 +119,10 @@ class MockSerial(object):
 
     logfile = None
 
+    #: any key:value pair in simple queries is exposed as a simple query response ... and the query string must be an exact match
+    #: value can be a string/unicode/bytes value or it can be a list or array, if a list or array is passed in then the responses will be cycled
+    #: any other value type will be coerced to `str`
+    simple_queries = {}
 
 
     def __init__(self,stream,logfile=None,**kwargs):
@@ -109,6 +133,12 @@ class MockSerial(object):
             >>> from serial_mock.decorators import serial_query
             >>> from serial_mock.mock import MockSerial
             >>> class SimpleSerial(MockSerial):
+            ...     simple_queries = {
+            ...         "get -name":"hello my name is bob",
+            ...         "get -next":["123","456","789"],
+            ...         "get -id":12
+            ...     }
+            ...     data={"x":6}
             ...     @serial_query("trigger command")
             ...     def do_something(self,requiredArg,optionalArg="0"):
             ...         return "RESULT: %r %r"%(requiredArg,optionalArg)
@@ -118,23 +148,41 @@ class MockSerial(object):
             "RESULT: '1' '0'"
             >>> mock.process_cmd("trigger command 1 2")
             "RESULT: '1' '2'"
-
+            >>> mock.process_cmd("get -name")
+            'hello my name is bob'
+            >>> mock.process_cmd("get -next")
+            '123'
+            >>> mock.process_cmd("get -next")
+            '456'
+            >>> mock.process_cmd("get -next")
+            '789'
+            >>> mock.process_cmd("get -next")
+            '123'
+            >>> mock.process_cmd("get -id")
+            '12'
+            >>> mock.process_cmd("get -x")
+            '6'
+            >>> mock.process_cmd('set -x 10')
+            'OK'
+            >>> mock.process_cmd("get -x")
+            '10'
+            
             :param stream: a path to a pipe (ie "/dev/ttyS99","COM11"), a stream like object, or "DEBUG"
             :param data_prefix: the separator between getters/setters and the data_attribute they reference            
            
         """
-
-        QueryStore.target = self
+        self.running = False
         self.kb = None
-            #keyboard.Listener(self._process_keydown).start()
+        QueryStore.target = self
         super(MockSerial, self).__init__()
         for key in "data_prefix baudrate prompt delimiter endline".split():
             if key in kwargs:
                 setattr(self,key,kwargs.pop(key))
-
         self.stream = stream
         if logfile:
-            self.logfile = open(logfile,"wb")
+            if isinstance(logfile,basestring):
+                logfile = open(logfile,"wb")
+            self.logfile = logfile
         if isinstance(stream,basestring) and not stream == "DEBUG":
             try:
                 self.stream = serial.Serial(stream,self.baudrate)
@@ -142,8 +190,17 @@ class MockSerial(object):
                 raise Exception("Unable To Bind To %r"%stream)
 
         for k in self.data:
-            QueryStore.register(lambda self,k=k:self.data.get(k,"None"),"get -%s"%k)
-            QueryStore.register(lambda self,value,k=k:self.data.update({k:value}) or "OK","set -%s"%k)
+            QueryStore.register(lambda self,k=k:str(self.data.get(k,"None")),"get %s%s"%(self.data_prefix,k))
+            QueryStore.register(lambda self,value,k=k:self.data.update({k:value}) or "OK","set %s%s"%(self.data_prefix,k))
+        self._simple_queries = {}
+        for k,v in self.simple_queries.items():
+            if isinstance(v,basestring):
+                self._simple_queries[k] = cycle([v,])
+            elif isinstance(v,(list,tuple)):
+                self._simple_queries[k] = cycle(v)
+            else:
+                self._simple_queries[k] = cycle([str(v), ])
+
         if self.stream is "DEBUG":
             logger.warn("Running in debug mode you may not run MainLoop!")
         else:
@@ -173,6 +230,10 @@ class MockSerial(object):
             self.logfile.write("<%r\n"%(cmd,))
         if not cmd:
             return ""
+        if cmd in self.simple_queries:
+            result = next(self._simple_queries[cmd])
+            logger.debug("Simple Query Response:%r -> %r"%(cmd,result))
+            return result
         try:
             method,rest = QueryStore._find(cmd)
 
@@ -184,9 +245,9 @@ class MockSerial(object):
             result = method(self,*rest)
             logger.debug("%s returns: %r"%(method.__name__,result))
             return result
-        except:
+        except Exception as e:
             traceback.print_exc()
-            return "ERROR %r"%cmd
+            return "ERROR %r : %s"%(cmd,e)
     def _process_keydown(self,key):
         result =  QueryStore._find_key_binding(key)
         if not result:
@@ -206,25 +267,44 @@ class MockSerial(object):
                 raise
         finally:
             self._LOCK.release()
+    def terminate(self):
+        """
+        stop the MainLoop if running
+        :return: 
+        """
+        self.running = False
+        try:
+            self.stream.close()
+        except:
+            logger.warn("unable to close stream...skipping")
+        if self.kb:
+            self.kb.halt = True
+        _StreamHelper._exit = True
+        logger.debug("Terminate Flags set!")
 
     def MainLoop(self):
         """
         Mainloop will run forever serving the rules provided in the subclass to the bound pipe
         
         """
+
         assert self.stream != "DEBUG"
+        self.running = True
         if QueryStore.__keybinds__:
             self.kb = KBListen(self._process_keydown)
             self.kb.Listen()
         print "LISTENING ON:",self.stream
-        while True:
+
+        while self.running:
             self.stream.write(self.prompt)
             try:
                 cmd = self.process_cmd(self._read_from_stream(self.stream, self.delimiter))
             except:
-                self.kb.halt = True
-                return
+                logger.info("Leaving MainLoop")
+                return self.terminate()
             self._write_to_stream(cmd)
+        self.terminate()
+        logger.info("Leaving MainLoop")
 
 
 class DummySerial(serial.Serial):

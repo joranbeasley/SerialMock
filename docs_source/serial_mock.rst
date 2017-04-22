@@ -32,6 +32,12 @@ EmittingSerial Class
     :undoc-members:
 
 
+debug output
+------------
+
+these modules make use of pythons logging module, you can set the verbosity with :code:`logging.getLogger("serial_mock").setLevel(logging.DEBUG)`
+
+
 Indices and tables
 
 
