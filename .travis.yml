@@ -1,0 +1,6 @@
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y socat
+  - sudo pip install pyserial
+script:
+  - echo OK
