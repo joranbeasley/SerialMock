@@ -12,6 +12,9 @@ from serial_mock.util import convertBridgeFileToInterface
 import logging
 log = logging.getLogger("serial_mock")
 
+
+
+
 class EchoSerial(MockSerial):
     """
     simple example client
@@ -68,11 +71,9 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="sub-command help")
-
     g1 = subparsers.add_parser("echo",help="bind to a port and just echo back anything it gets ... with a prompt")
     g1.set_defaults(which="g1")
     g1.add_argument("COM1",help='the comport to bind to')
-
     g2 = subparsers.add_parser("bridge",help="create a bridge between two ports, this is useful for generating a logfile")
     g2.set_defaults(which="g2")
     g2.add_argument("COM1",help='the first comport to bind to')
