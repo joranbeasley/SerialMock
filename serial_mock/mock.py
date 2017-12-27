@@ -202,10 +202,11 @@ class MockSerial(object):
             else:
                 self._simple_queries[k] = cycle([str(v), ])
 
-        if self.stream is "DEBUG":
+        if self.stream == "DEBUG":
             logger.warn("Running in debug mode you may not run MainLoop!")
         else:
             assert hasattr(self.stream,"read") and hasattr(self.stream,"write"),"STREAM must provide a minimum of read and write"
+
     @staticmethod
     def _read_from_stream(stream,terminal):
         return _StreamHelper.read_until(stream, terminal)
@@ -277,7 +278,7 @@ class MockSerial(object):
         try:
             self.stream.close()
         except:
-            logger.warn("unable to close stream...skipping")
+            logger.exception("unable to close stream...skipping")
         if self.kb:
             self.kb.halt = True
         _StreamHelper._exit = True
@@ -300,12 +301,33 @@ class MockSerial(object):
             self.stream.write(self.prompt)
             try:
                 cmd = self.process_cmd(self._read_from_stream(self.stream, self.delimiter))
+                print "GOT CMD:",cmd
             except:
                 logger.info("Leaving MainLoop")
                 return self.terminate()
             self._write_to_stream(cmd)
         self.terminate()
         logger.info("Leaving MainLoop")
+    def __reduce__(self):
+        print "R:",self
+        return (self.__class__,(self.stream,),self.__getstate__())
+    def __getstate__(self):
+        data = self.__dict__
+        data.pop('_simple_queries',None)
+
+        print "DATA:",data
+        return data
+
+    def __setstate__(self,a_dict):
+        print "C:",a_dict
+        for attr in a_dict:
+            print "SET:",attr
+            if hasattr(self,attr):
+                setattr(self,attr,a_dict[attr])
+
+
+
+
 
 
 class DummySerial(serial.Serial):
@@ -347,6 +369,7 @@ class DummySerial(serial.Serial):
         self.tx_buffer = ""
         self.port = "MOC1"
         self.is_open = True
+
 
     def open(self):
         return True

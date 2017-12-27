@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mock Serial Controller</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <!-- Compiled and minified CSS -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!-- Compiled and minified JavaScript -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/js/materialize.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/1.4.2/css/jquery.terminal.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/1.4.2/js/jquery.terminal.js"></script>
+
+</head>
+<body>
+<div id="demo_term"></div>
+
+<script type="text/javascript">
+    $(function() {
+    var term = $('#demo_term').terminal(
+        function(command, term) {
+            term.pause();
+            var payload={
+            "query": command,
+             };
+            $.post('http://localhost:4000', data=JSON.stringify(payload),function(response) {
+                console.log(response)
+                term.echo(response).resume();
+            });
+        }, {
+        greetings: 'Serial Term [Com3]',
+        width:400,
+        height:400,
+        prompt:""
+        /*onBlur: function() {
+            return false;
+        }*/
+    });
+
+});
+</script>
+</body>

@@ -9,7 +9,13 @@ import traceback
 import logging
 logger = logging.getLogger("serial_mock")
 
+import inspect
 
+def get_class_that_defined_method(meth):
+    for cls in inspect.getmro(meth.im_class):
+        if meth.__name__ in cls.__dict__:
+            return cls
+    return None
 class QueryStore(object):
     """
     >>> @QueryStore.register("show")
@@ -48,6 +54,7 @@ class QueryStore(object):
         :param delay: how long to wait before responding to a given command
         :return: 
         '''
+        from serial_mock.mock import MockSerial
         if route is None:
             route = re.sub("([a-z])([A-Z])",lambda m:" ".join(m.groups()).lower(),re.sub("_"," ",func.__name__))
 
