@@ -9,7 +9,8 @@ import traceback
 import logging
 logger = logging.getLogger("serial_mock")
 
-
+if int(sys.version[0]) >= 3:
+    basestring = (str,bytes)
 class QueryStore(object):
     """
     >>> @QueryStore.register("show")
@@ -101,3 +102,6 @@ class QueryStore(object):
 
 serial_query = QueryStore
 bind_key_down = QueryStore.bind_key_down
+
+if __name__ == "__main__":
+    print("ASD")

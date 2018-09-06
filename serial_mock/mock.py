@@ -6,6 +6,7 @@ note that **data** is a special attribute and any keys passed into it will autom
 import random
 import threading
 import traceback
+
 from itertools import cycle
 
 import serial
@@ -13,8 +14,13 @@ import re
 import time
 
 import sys
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO
+except:
+    from io import StringIO
 
+if int(sys.version[0]) >= 3:
+    basestring=(str,bytes)
 
 from serial_mock.decorators import QueryStore
 from serial_mock.kb_listen import KBListen
@@ -64,7 +70,6 @@ class _StreamHelper(object):
         r"""
         reads a stream until a terminal condition is met 
         
-        >>> from cStringIO import StringIO
         >>> s = StringIO("Hello World\rBob")
         >>> _StreamHelper.read_until(s,"\r")
         'Hello World\r'
@@ -93,6 +98,7 @@ class _StreamHelper(object):
                 MockSerial._LOCK.acquire()
                 try:
                     s += stream.read(1)
+                    print("S:",s)
                 finally:
                     MockSerial._LOCK.release()
             else:
@@ -201,6 +207,10 @@ class MockSerial(object):
                 self._simple_queries[k] = cycle(v)
             else:
                 self._simple_queries[k] = cycle([str(v), ])
+        if not isinstance(self.endline,bytes):
+            self.endline = self.endline.encode("latin1","replace")
+        if not isinstance(self.prompt,bytes):
+            self.prompt = self.prompt.encode("latin1","replace")
 
         if self.stream is "DEBUG":
             logger.warn("Running in debug mode you may not run MainLoop!")
@@ -294,7 +304,7 @@ class MockSerial(object):
         if QueryStore.__keybinds__:
             self.kb = KBListen(self._process_keydown)
             self.kb.Listen()
-        print "LISTENING ON:",self.stream
+        print("LISTENING ON:",self.stream)
 
         while self.running:
             self.stream.write(self.prompt)
@@ -407,7 +417,7 @@ if __name__ == "__main__":
             return "Hello, %s"%name
 
     d = DummySerial(TestClass)
-    print isinstance(d,serial.Serial),d
-    print "sent:",repr(d.write("hello joey\r"))
-    print "RECV:",repr(d.read(d.inWaiting()))
+    print(isinstance(d,serial.Serial),d)
+    print("sent:",repr(d.write("hello joey\r")))
+    print("RECV:",repr(d.read(d.inWaiting())))
 

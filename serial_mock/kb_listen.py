@@ -41,7 +41,7 @@ class KBListen:
 
 if __name__ == "__main__":
     def on_key(key):
-        print "KK:",key
+        print("KK:",key)
     kb = KBListen(on_key)
     kb.Listen()
 
@@ -52,4 +52,4 @@ if __name__ == "__main__":
         except:
             break
     kb.halt=True
-    print "GOODBYE!"
+    print("GOODBYE!")

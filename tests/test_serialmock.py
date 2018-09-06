@@ -1,7 +1,9 @@
+import os
+import sys
 import unittest
 
 import time
-
+sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__),"..")))
 from subprocess import Popen,PIPE
 
 def getPortTunnelLinux():
@@ -29,21 +31,22 @@ class SerialMockBoundTestCase(unittest.TestCase):
         import threading
         import serial
         import logging
+
         logging.getLogger("serial_mock").setLevel(logging.DEBUG)
         from serial_mock.mock import MockSerial
         from serial_mock.decorators import serial_query,bind_key_down
         self.ports = getPortTunnel()
 
         class MyInterface(MockSerial):
-            simple_queries = {"get greeting":"Hello User",
-                              "get next":["1","2"]}
-            data = {"x":5}
+            simple_queries = {b"get greeting":b"Hello User",
+                              b"get next":[b"1",b"2"]}
+            data = {b"x":5}
             @bind_key_down("a")
             def increment_x(self):
                 self.data["x"] = int(self.data['x'])+ 1
-            @serial_query("less x")
+            @serial_query(b"less x")
             def decrement_x(self):
-                self.data["x"] = int(self.data['x']) + 1
+                self.datfa["x"] = int(self.data['x']) + 1
         self.dut = MyInterface(self.ports[0])
         self.ser = serial.Serial(self.ports[1],timeout=0.5)
         self.proc = threading.Thread(target=self.dut.MainLoop)
@@ -58,12 +61,12 @@ class SerialMockBoundTestCase(unittest.TestCase):
         self.assertEquals(self.ser.read(1000),self.dut.prompt)
     def test_simpleQuery_STR(self):
         self.assertEquals(self.ser.read(1000), self.dut.prompt)
-        self.ser.write("get greeting\r")
-        self.assertEquals(self.ser.read(1000), self.dut.simple_queries["get greeting"]+self.dut.endline+self.dut.prompt)
+        self.ser.write(b"get greeting\r")
+        self.assertEquals(self.ser.read(1000), self.dut.simple_queries[b"get greeting"]+self.dut.endline+self.dut.prompt)
 
     def test_simpleQuery_CYCLE(self):
         self.assertEquals(self.ser.read(1000), self.dut.prompt)
         for i in range(3):
-            self.ser.write("get next\r")
+            self.ser.write(b"get next\r")
             result = self.ser.read(1000)
-            self.assertEquals(result,self.dut.simple_queries['get next'][i%2]+self.dut.endline+self.dut.prompt)
+            self.assertEquals(result,self.dut.simple_queries[b'get next'][i%2]+self.dut.endline+self.dut.prompt)
