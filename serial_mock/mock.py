@@ -390,15 +390,23 @@ class EmittingSerial(MockSerial):
         super(EmittingSerial, self).__init__(stream, logfile, **kwargs)
 
     def _on_start_emit(self):
-        threading.Timer(random.uniform(*self.interval),self._on_emit).start()
+        self.emit_timer = threading.Timer(random.uniform(*self.interval),self._on_emit)
+        self.emit_timer.start()
 
     def _on_emit(self):
-        self._write_to_stream(self.emit)
-        self._on_start_emit()
+        if self.running:
+          self._write_to_stream(self.emit)
+          self._on_start_emit()
+        
     def MainLoop(self):
-        threading.Timer(random.uniform(*self.delay), self._on_start_emit).start()
+        self.emit_timer = threading.Timer(random.uniform(*self.delay), self._on_start_emit)
+        self.emit_timer.start()
         MockSerial.MainLoop(self)
-
+        try:
+          # self.timer might have already fired and not been re-started
+          self.emit_timer.cancel()
+        except:
+          pass
 
 if __name__ == "__main__":
     class TestClass(MockSerial):
